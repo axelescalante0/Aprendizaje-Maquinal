@@ -71,41 +71,111 @@ class KNN:
         return y_pred
 
 
-df_iris = load_iris(as_frame=True).frame
-X = df_iris[ ['petal length (cm)', 'petal width (cm)'] ]
-y = df_iris.target
+# df_iris = load_iris(as_frame=True).frame
+# X = df_iris[ ['petal length (cm)', 'petal width (cm)'] ]
+# y = df_iris.target
 
-#print('Etiquetas de clase:', np.unique(y))
-
-
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, shuffle=True, random_state=1,  stratify = y) #lo que hace esta linea es dividir los datos en datos de
-                                                                                                                    #entremiento y de test, en este caso es 70-30. (test_size)
-#El random_state es la semilla
-#el shuffle es para mezclar los datos asi te aseguras que no haya sesgo
-#stratify basicamente lo que hace es que no hayan 90 datos de un tipo y solo 10 de otro por ej, los nivela.
+# #print('Etiquetas de clase:', np.unique(y))
 
 
-
-# Normalización de los datos / estandarizacion
-from sklearn.preprocessing import StandardScaler
-sc = StandardScaler()
-sc.fit(X_train)
-X_train_std = sc.transform(X_train)
-X_test_std = sc.transform(X_test)
-
-
-# Creamos un objeto knn usando la clase implementada
-knn = KNN(k=3)
-# llamamos al método de entrenamiento ---> Datos de entrenamiento
-
-
-knn.fit(X_train_std, y_train)
+# X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, shuffle=True, random_state=1,  stratify = y) #lo que hace esta linea es dividir los datos en datos de
+#                                                                                                                     #entremiento y de test, en este caso es 70-30. (test_size)
+# #El random_state es la semilla
+# #el shuffle es para mezclar los datos asi te aseguras que no haya sesgo
+# #stratify basicamente lo que hace es que no hayan 90 datos de un tipo y solo 10 de otro por ej, los nivela.
 
 
 
-# Evaluamos el clasificador con los datos de prueba
-y_pred = knn.predict(X_test_std)
-# Comparamos nuestra predicción con los targets
-(y_pred==y_test).sum()
+# # Normalización de los datos / estandarizacion
+# from sklearn.preprocessing import StandardScaler
+# sc = StandardScaler()
+# sc.fit(X_train)
+# X_train_std = sc.transform(X_train)
+# X_test_std = sc.transform(X_test)
+
+
+# # Creamos un objeto knn usando la clase implementada
+# knn = KNN(k=3)
+# # llamamos al método de entrenamiento ---> Datos de entrenamiento
+
+
+# knn.fit(X_train_std, y_train)
+
+
+
+# # Evaluamos el clasificador con los datos de prueba
+# y_pred = knn.predict(X_test_std)
+# # Comparamos nuestra predicción con los targets
+# (y_pred==y_test).sum()
+
+# y_pred = knn.predict(X_test_std)
+
+# def accuracy(y_pred, y_test):
+#     return np.sum( np.equal(y_pred, y_test) ) / len(y_test)
+
+# print(accuracy(y_pred, y_test))
+
+
+#usando knn coso
+df_prestamos = pd.read_csv("./1_datos/prestamos.csv", index_col=False)
+df_prestamos.head()
+
+df_prestamos.info()
+print("\n")
+df_prestamos.describe()
+
+train_set, test_set = train_test_split(df_prestamos, test_size=0.2, random_state=42, stratify=df_prestamos["estado"])
+
+# hacemos una copia del conjunto de entrenamiento
+housing = train_set.copy()
+
+
+x_train = housing.drop("estado", axis=1)
+x_train_labels = housing["estado"].copy()
+
+print('Etiquetas de clase:', np.unique(x_train_labels))
+
+from sklearn.impute import SimpleImputer
+imputer = SimpleImputer(strategy="median") #Para remplazar los valores faltante con la mediana
+imputer.fit(x_train)
+
+print(imputer.statistics_,"\n")
+
+#Ahora se puede usar este imputador "entrenado" para transformar el conjunto de entrenamiento reemplazando los valores faltantes con las medianas calculadas:
+
+x_train_1 = imputer.transform(x_train) # me devuelve un numpy array
+type(x_train_1)
+
+print(imputer.feature_names_in_) # Muestra los nombres de las columnas que fueron pasadas al imputador
+
+df_x_train_num = pd.DataFrame(x_train_1, columns=x_train.columns, index=x_train.index)
+#null_rows_idx = x_train.isnull().any(axis=1)
+#df_x_train_num.loc[null_rows_idx].head()
+
+x_train_cat = train_set.loc[:,["estado"]]
+x_train_cat.head(8)
+
+#Clase one_hot
+from sklearn.preprocessing import OneHotEncoder
+
+cat_encoder = OneHotEncoder()
+x_train_cat_1hot = cat_encoder.fit_transform(x_train_cat)
+x_train_cat_1hot
+
+x_train_cat_1hot.toarray() #
+
+print(cat_encoder.feature_names_in_) #devuelve el nombre de la columna
+
+print(cat_encoder.get_feature_names_out()) #devuelve un nombre de columna con cada estado
+
+#Creamos un Data Frame con las clases ya transformadas a Dummy
+
+df_x_train_cat_1hot = pd.DataFrame(x_train_cat_1hot.toarray(), columns=cat_encoder.get_feature_names_out(), index=x_train_cat.index)
+print(df_x_train_cat_1hot)
+
+#Concatenacion de Dataframe de las etiquetas con el que contiene las variables numericas
+
+df_train = pd.concat([df_x_train_num, df_x_train_cat_1hot], axis=1)
+df_train
 
 
