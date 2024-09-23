@@ -110,16 +110,17 @@ Y_train_target = df_train["estado_pagado"]
 Y_train_target
 
 # Dividir el conjunto de entrenamiento original en nuevo conjunto de entrenamiento y validación
-X_valid = df_train[:20000]
+X_valid = df_x_train_num[:20000]
 y_valid = Y_train_target[:20000]
 
-X_train_new = df_train[20000:]
+X_train_new = df_x_train_num[20000:]
 y_train_new = Y_train_target[20000:]
 
 #Pasamos a Array los data frame (Queda sujeta a revison para optimizar esta parte)
 X_train_new = X_train_new.to_numpy()
 y_train_new = y_train_new.to_numpy()
 X_valid_array = X_valid.to_numpy()
+
 
 
 from sklearn.neighbors import KNeighborsClassifier
@@ -147,8 +148,9 @@ from sklearn.metrics import accuracy_score
 accuracy = accuracy_score(y_valid, y_pred_valid)
 accuracy
 
+
 presiciones = []
-#con los 20k datos tarda 56s aprox
+#con los 20k datos tarda 36s aprox
 k_values = range(1, 21) #rango
 
 for k in k_values:
